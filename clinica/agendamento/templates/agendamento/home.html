@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Sistema de Agendamento Médico{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Bem-vindo à Clínica Médica!</h1>
+    <p class="lead">Sistema de agendamento de consultas</p>
+    <hr class="my-4">
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <a href="{% url 'paciente-list' %}" class="btn btn-primary btn-lg btn-block">Pacientes</a>
+        </div>
+        <div class="col-md-4 mb-3">
+            <a href="{% url 'medico-list' %}" class="btn btn-success btn-lg btn-block">Médicos</a>
+        </div>
+        <div class="col-md-4 mb-3">
+            <a href="{% url 'consulta-list' %}" class="btn btn-info btn-lg btn-block">Consultas</a>
+        </div>
+    </div>
+</div>
+
+<h2>Últimas Consultas</h2>
+<div class="list-group">
+    {% for consulta in ultimas_consultas %}
+    <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ consulta.paciente.nome }} com Dr. {{ consulta.medico.nome }}</h5>
+            <small>{{ consulta.data_hora|date:"d/m/Y H:i" }}</small>
+        </div>
+        <p class="mb-1">{{ consulta.observacoes|default:"Nenhuma observação" }}</p>
+    </div>
+    {% empty %}
+    <div class="alert alert-warning">Nenhuma consulta agendada.</div>
+    {% endfor %}
+</div>
+{% endblock %}

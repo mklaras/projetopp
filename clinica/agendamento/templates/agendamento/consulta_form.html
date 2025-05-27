@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.id %}Editar{% else %}Nova{% endif %} Consulta{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">{% if form.instance.id %}Editar{% else %}Nova{% endif %} Consulta</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form.paciente.label_tag }}
+            {{ form.paciente }}
+            {{ form.paciente.errors }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form.medico.label_tag }}
+            {{ form.medico }}
+            {{ form.medico.errors }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form.data_hora.label_tag }}
+            {{ form.data_hora }}
+            {{ form.data_hora.errors }}
+        </div>
+    </div>
+    <div class="mb-3">
+        {{ form.observacoes.label_tag }}
+        {{ form.observacoes }}
+        {{ form.observacoes.errors }}
+    </div>
+    <button type="submit" class="btn btn-primary">Salvar</button>
+    <a href="{% url 'consulta-list' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Agenda de {{ medico.nome }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Agenda de {{ medico.nome }} - {{ data|date:"d/m/Y" }}</h1>
+
+<div class="mb-3">
+    <form method="get" class="row g-3">
+        <div class="col-md-4">
+            <input type="date" name="data" value="{{ data|date:'Y-m-d' }}" class="form-control">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
+</div>
+
+<div class="list-group">
+    {% for consulta in consultas %}
+    <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ consulta.paciente.nome }}</h5>
+            <small>{{ consulta.data_hora|time:"H:i" }}</small>
+        </div>
+        <p class="mb-1">{{ consulta.observacoes|default:"Nenhuma observação" }}</p>
+        <small>
+            <a href="{% url 'consulta-update' consulta.id %}" class="btn btn-sm btn-warning">Editar</a>
+            <a href="{% url 'consulta-delete' consulta.id %}" class="btn btn-sm btn-danger">Excluir</a>
+        </small>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">Nenhuma consulta agendada para este dia.</div>
+    {% endfor %}
+</div>
+{% endblock %}

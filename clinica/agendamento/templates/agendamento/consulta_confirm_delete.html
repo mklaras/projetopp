@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Consulta{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Excluir Consulta</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Detalhes da Consulta</h5>
+        <p><strong>Paciente:</strong> {{ object.paciente.nome }}</p>
+        <p><strong>Médico:</strong> Dr. {{ object.medico.nome }}</p>
+        <p><strong>Data/Hora:</strong> {{ object.data_hora|date:"d/m/Y H:i" }}</p>
+        <p><strong>Observações:</strong> {{ object.observacoes|default:"Nenhuma" }}</p>
+    </div>
+</div>
+
+<p class="text-danger">Tem certeza que deseja excluir esta consulta?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+    <a href="{% url 'consulta-list' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

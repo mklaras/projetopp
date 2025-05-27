@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Médicos Cadastrados{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Médicos Cadastrados</h1>
+<a href="{% url 'medico-create' %}" class="btn btn-primary mb-3">Novo Médico</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Especialidade</th>
+            <th>CRM</th>
+            <th>Telefone</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for medico in medicos %}
+        <tr>
+            <td>{{ medico.nome }}</td>
+            <td>{{ medico.especialidade }}</td>
+            <td>{{ medico.crm }}</td>
+            <td>{{ medico.telefone }}</td>
+            <td>
+                <a href="{% url 'medico-update' medico.id %}" class="btn btn-sm btn-warning">Editar</a>
+                <a href="{% url 'medico-delete' medico.id %}" class="btn btn-sm btn-danger">Excluir</a>
+                <a href="{% url 'agenda-medico' medico.id %}" class="btn btn-sm btn-info">Agenda</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
