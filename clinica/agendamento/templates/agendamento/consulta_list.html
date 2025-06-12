@@ -1,57 +1,34 @@
-{% extends 'base.html' %}
-
-{% block title %}Consultas Agendadas{% endblock %}
+{% extends 'agendamento/base.html' %}
 
 {% block content %}
-<h1 class="mb-4">Consultas Agendadas</h1>
-<a href="{% url 'consulta-create' %}" class="btn btn-primary mb-3">Nova Consulta</a>
+<h2>Consultas Agendadas</h2>
+<a href="{% url 'consulta-create' %}">Nova Consulta</a>
 
-<div class="mb-3">
-    <form method="get" class="row g-3">
-        <div class="col-md-3">
-            <input type="date" name="data" class="form-control" value="{{ request.GET.data }}">
-        </div>
-        <div class="col-md-3">
-            <select name="medico" class="form-select">
-                <option value="">Todos os médicos</option>
-                {% for medico in todos_medicos %}
-                <option value="{{ medico.id }}" {% if request.GET.medico == medico.id|stringformat:"s" %}selected{% endif %}>
-                    {{ medico.nome }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
-        </div>
-    </form>
-</div>
-
-<table class="table table-striped">
+<table class="table">
     <thead>
         <tr>
-            <th>Data/Hora</th>
             <th>Paciente</th>
             <th>Médico</th>
-            <th>Especialidade</th>
+            <th>Data/Hora</th>
+            <th>Observações</th>
             <th>Ações</th>
         </tr>
     </thead>
     <tbody>
-        {% for consulta in consultas %}
+        {% for consulta in object_list %}
         <tr>
-            <td>{{ consulta.data_hora|date:"d/m/Y H:i" }}</td>
             <td>{{ consulta.paciente.nome }}</td>
-            <td>Dr. {{ consulta.medico.nome }}</td>
-            <td>{{ consulta.medico.especialidade }}</td>
+            <td>{{ consulta.medico.nome }} ({{ consulta.medico.especialidade }})</td>
+            <td>{{ consulta.data_hora|date:"d/m/Y H:i" }}</td>
+            <td>{{ consulta.observacoes|default:"-" }}</td>
             <td>
-                <a href="{% url 'consulta-update' consulta.id %}" class="btn btn-sm btn-warning">Editar</a>
-                <a href="{% url 'consulta-delete' consulta.id %}" class="btn btn-sm btn-danger">Excluir</a>
+                <a href="{% url 'consulta-update' consulta.pk %}">Editar</a>
+                <a href="{% url 'consulta-delete' consulta.pk %}">Excluir</a>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="5" class="text-center">Nenhuma consulta agendada</td>
+            <td colspan="5">Nenhuma consulta agendada.</td>
         </tr>
         {% endfor %}
     </tbody>

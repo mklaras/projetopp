@@ -2,6 +2,14 @@ from django.contrib import admin
 from django.urls import path
 from agendamento import views  
 from agendamento.views import HomeView
+from agendamento.views import (
+    HomeView,
+    PacienteListView, PacienteCreateView, PacienteUpdateView, PacienteDeleteView,
+    MedicoListView, MedicoCreateView, MedicoUpdateView, MedicoDeleteView,
+    ConsultaListView, ConsultaCreateView, ConsultaUpdateView, ConsultaDeleteView,
+    agenda_medico, historico_paciente,
+    horarios_disponiveis, ConsultaHorariosView
+)
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
@@ -28,4 +36,7 @@ urlpatterns = [
     # URLs funcionais
     path('medicos/<int:medico_id>/agenda/', views.agenda_medico, name='agenda-medico'),
     path('pacientes/<int:paciente_id>/historico/', views.historico_paciente, name='historico-paciente'),
+
+    path('api/horarios-disponiveis/<int:medico_id>/<str:data>/', horarios_disponiveis, name='horarios-disponiveis'),
+    path('recepcionista/horarios/', ConsultaHorariosView.as_view(), name='consulta-horarios'),
 ]

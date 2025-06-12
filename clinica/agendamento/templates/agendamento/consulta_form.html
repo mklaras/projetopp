@@ -1,37 +1,105 @@
-{% extends 'base.html' %}
-
-{% block title %}{% if form.instance.id %}Editar{% else %}Nova{% endif %} Consulta{% endblock %}
+{% extends 'agendamento/base.html' %}
 
 {% block content %}
-<h1 class="mb-4">{% if form.instance.id %}Editar{% else %}Nova{% endif %} Consulta</h1>
+<h2>{% if object %}Editar{% else %}Nova{% endif %} Consulta</h2>
 
-<form method="post">
+<form method="post" id="consultaForm" enctype="multipart/form-data">
     {% csrf_token %}
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            {{ form.paciente.label_tag }}
-            {{ form.paciente }}
-            {{ form.paciente.errors }}
-        </div>
-        <div class="col-md-6 mb-3">
-            {{ form.medico.label_tag }}
-            {{ form.medico }}
-            {{ form.medico.errors }}
-        </div>
+    
+    <div class="form-group">
+        <label for="id_medico">Médico:</label>
+        {{ form.medico }}
     </div>
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            {{ form.data_hora.label_tag }}
-            {{ form.data_hora }}
-            {{ form.data_hora.errors }}
-        </div>
+    
+    <div class="form-group">
+        <label for="id_data">Data:</label>
+        <input type="date" id="id_data" name="data" required>
     </div>
-    <div class="mb-3">
+    
+    <div class="form-group">
+        <label for="id_horario">Horário Disponível:</label>
+        <select id="id_horario" name="horario" required disabled>
+            <option value="">Selecione um médico e uma data primeiro</option>
+        </select>
+    </div>
+    
+    <div class="form-group" style="display:none;">
+        {{ form.data_hora.label_tag }}
+        {{ form.data_hora }}
+    </div>
+    
+    <div class="form-group">
+        {{ form.paciente.label_tag }}
+        {{ form.paciente }}
+    </div>
+    
+    <div class="form-group">
         {{ form.observacoes.label_tag }}
         {{ form.observacoes }}
-        {{ form.observacoes.errors }}
     </div>
+    
+    {{ form.as_p }}
+
     <button type="submit" class="btn btn-primary">Salvar</button>
     <a href="{% url 'consulta-list' %}" class="btn btn-secondary">Cancelar</a>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const medicoSelect = document.getElementById('id_medico');
+    const dataInput = document.getElementById('id_data');
+    const horarioSelect = document.getElementById('id_horario');
+    const dataHoraInput = document.getElementById('id_data_hora');
+    
+    function carregarHorarios() {
+        const medicoId = medicoSelect.value;
+        const data = dataInput.value;
+        
+        if (!medicoId || !data) {
+            horarioSelect.innerHTML = '<option value="">Selecione um médico e uma data primeiro</option>';
+            horarioSelect.disabled = true;
+            return;
+        }
+        
+        fetch(`/api/horarios-disponiveis/${medicoId}/${data}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                horarioSelect.innerHTML = '';
+                if (data.horarios.length === 0) {
+                    horarioSelect.innerHTML = '<option value="">Nenhum horário disponível</option>';
+                } else {
+                    data.horarios.forEach(horario => {
+                        const option = document.createElement('option');
+                        option.value = horario;
+                        option.textContent = horario;
+                        horarioSelect.appendChild(option);
+                    });
+                    horarioSelect.disabled = false;
+                }
+            });
+    }
+    
+    medicoSelect.addEventListener('change', carregarHorarios);
+    dataInput.addEventListener('change', carregarHorarios);
+    
+    document.getElementById('consultaForm').addEventListener('submit', function(e) {
+        if (!dataHoraInput.value) {
+            e.preventDefault();
+            const data = dataInput.value;
+            const horario = horarioSelect.value;
+            if (data && horario) {
+                dataHoraInput.value = `${data}T${horario}`;
+                this.submit();
+            } else {
+                alert('Por favor, selecione um horário disponível');
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

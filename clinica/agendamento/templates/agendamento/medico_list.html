@@ -1,12 +1,10 @@
-{% extends 'base.html' %}
-
-{% block title %}Médicos Cadastrados{% endblock %}
+{% extends 'agendamento/base.html' %}
 
 {% block content %}
-<h1 class="mb-4">Médicos Cadastrados</h1>
-<a href="{% url 'medico-create' %}" class="btn btn-primary mb-3">Novo Médico</a>
+<h2>Médicos Cadastrados</h2>
+<a href="{% url 'medico-create' %}" class="btn">Novo Médico</a>
 
-<table class="table table-striped">
+<table class="table">
     <thead>
         <tr>
             <th>Nome</th>
@@ -17,17 +15,20 @@
         </tr>
     </thead>
     <tbody>
-        {% for medico in medicos %}
+        {% for medico in medicos %}  <!-- Note o uso de 'medicos' aqui -->
         <tr>
             <td>{{ medico.nome }}</td>
             <td>{{ medico.especialidade }}</td>
             <td>{{ medico.crm }}</td>
             <td>{{ medico.telefone }}</td>
             <td>
-                <a href="{% url 'medico-update' medico.id %}" class="btn btn-sm btn-warning">Editar</a>
-                <a href="{% url 'medico-delete' medico.id %}" class="btn btn-sm btn-danger">Excluir</a>
-                <a href="{% url 'agenda-medico' medico.id %}" class="btn btn-sm btn-info">Agenda</a>
+                <a href="{% url 'medico-update' medico.pk %}">Editar</a>
+                <a href="{% url 'medico-delete' medico.pk %}">Excluir</a>
             </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">Nenhum médico cadastrado.</td>
         </tr>
         {% endfor %}
     </tbody>

@@ -1,0 +1,71 @@
+{% extends 'agendamento/base.html' %}
+
+{% block content %}
+<h2>Consulta de Horários Disponíveis</h2>
+
+<form id="consultaHorariosForm">
+    <div class="form-group">
+        <label for="medico">Médico:</label>
+        <select id="medico" class="form-control" required>
+            <option value="">Selecione um médico</option>
+            {% for medico in medicos %}
+            <option value="{{ medico.id }}">{{ medico.nome }} - {{ medico.especialidade }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="data">Data:</label>
+        <input type="date" id="data" class="form-control" required>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Consultar</button>
+</form>
+
+<div id="resultado" class="mt-4" style="display:none;">
+    <h3>Horários Disponíveis</h3>
+    <ul id="listaHorarios" class="list-group"></ul>
+</div>
+
+<script>
+document.getElementById('consultaHorariosForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const medicoId = document.getElementById('medico').value;
+    const data = document.getElementById('data').value;
+    
+    if (!medicoId || !data) {
+        alert('Por favor, selecione um médico e uma data');
+        return;
+    }
+    
+    fetch(`/api/horarios-disponiveis/${medicoId}/${data}/`)
+        .then(response => response.json())
+        .then(data => {
+            const resultadoDiv = document.getElementById('resultado');
+            const listaHorarios = document.getElementById('listaHorarios');
+            
+            listaHorarios.innerHTML = '';
+            
+            if (data.error) {
+                alert(data.error);
+                resultadoDiv.style.display = 'none';
+                return;
+            }
+            
+            if (data.horarios.length === 0) {
+                listaHorarios.innerHTML = '<li class="list-group-item">Nenhum horário disponível</li>';
+            } else {
+                data.horarios.forEach(horario => {
+                    const item = document.createElement('li');
+                    item.className = 'list-group-item';
+                    item.textContent = horario;
+                    listaHorarios.appendChild(item);
+                });
+            }
+            
+            resultadoDiv.style.display = 'block';
+        });
+});
+</script>
+{% endblock %}
