@@ -2,6 +2,7 @@ from django import forms
 from .models import Paciente, Medico, Consulta
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from datetime import datetime
 
 class PacienteForm(forms.ModelForm):
     class Meta:
@@ -21,17 +22,27 @@ class MedicoForm(forms.ModelForm):
         }
 
 class ConsultaForm(forms.ModelForm):
+    data = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    horario = forms.CharField(widget=forms.HiddenInput())
+    
     class Meta:
         model = Consulta
-        fields = ['paciente', 'medico', 'data_hora', 'observacoes']
-        widgets = {
-            'data_hora': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'observacoes': forms.Textarea(attrs={'rows': 3}),
-        }
-        
-    def clean_data_hora(self):
-        data_hora = self.cleaned_data.get('data_hora')  # Corrigido de 'data-hora' para 'data_hora'
-        if data_hora and data_hora < timezone.now():
-            raise ValidationError("Não é possível agendar consultas no passado.")
-        return data_hora
+        fields = ['medico', 'paciente', 'data_hora', 'observacoes']
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields['data'].initial = self.instance.data_hora.date()
+            self.fields['horario'].initial = self.instance.data_hora.time()
+    
+    def save(self, commit=True):
+        consulta = super().save(commit=False)
+        data = self.cleaned_data['data']
+        horario = self.cleaned_data['horario']
+        naive_datetime = datetime.combine(data, datetime.strptime(horario, '%H:%M').time())
+    
+        consulta.data_hora = timezone.make_aware(naive_datetime)
+        
+        if commit:
+            consulta.save()
+        return consulta

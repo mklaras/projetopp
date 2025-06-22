@@ -1,32 +1,39 @@
-{% extends 'agendamento/base.html' %}
+{% extends "agendamento/base.html" %}
 
 {% block content %}
-<h2>Consulta de Horários Disponíveis</h2>
-
-<form id="consultaHorariosForm">
-    <div class="form-group">
-        <label for="medico">Médico:</label>
-        <select id="medico" class="form-control" required>
-            <option value="">Selecione um médico</option>
-            {% for medico in medicos %}
-            <option value="{{ medico.id }}">{{ medico.nome }} - {{ medico.especialidade }}</option>
-            {% endfor %}
-        </select>
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3>Consulta de Horários Disponíveis</h3>
     </div>
-    
-    <div class="form-group">
-        <label for="data">Data:</label>
-        <input type="date" id="data" class="form-control" required>
-    </div>
-    
-    <button type="submit" class="btn btn-primary">Consultar</button>
-</form>
+    <div class="card-body">
+        <form id="consultaHorariosForm">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="medico" class="form-label">Médico:</label>
+                    <select id="medico" class="form-select" required>
+                        <option value="">Selecione um médico</option>
+                        {% for medico in medicos %}
+                        <option value="{{ medico.id }}">{{ medico.nome }} - {{ medico.especialidade }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="data" class="form-label">Data:</label>
+                    <input type="date" id="data" class="form-control" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Consultar</button>
+        </form>
 
-<div id="resultado" class="mt-4" style="display:none;">
-    <h3>Horários Disponíveis</h3>
-    <ul id="listaHorarios" class="list-group"></ul>
+        <div id="resultado" class="mt-4" style="display:none;">
+            <h4>Horários Disponíveis</h4>
+            <div class="list-group" id="listaHorarios"></div>
+        </div>
+    </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
 document.getElementById('consultaHorariosForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -48,17 +55,22 @@ document.getElementById('consultaHorariosForm').addEventListener('submit', funct
             listaHorarios.innerHTML = '';
             
             if (data.error) {
-                alert(data.error);
-                resultadoDiv.style.display = 'none';
-                return;
-            }
-            
-            if (data.horarios.length === 0) {
-                listaHorarios.innerHTML = '<li class="list-group-item">Nenhum horário disponível</li>';
+                listaHorarios.innerHTML = `
+                    <div class="alert alert-danger">
+                        ${data.error}
+                    </div>
+                `;
+            } else if (data.horarios.length === 0) {
+                listaHorarios.innerHTML = `
+                    <div class="alert alert-warning">
+                        Nenhum horário disponível para esta data
+                    </div>
+                `;
             } else {
                 data.horarios.forEach(horario => {
-                    const item = document.createElement('li');
-                    item.className = 'list-group-item';
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'list-group-item list-group-item-action';
                     item.textContent = horario;
                     listaHorarios.appendChild(item);
                 });

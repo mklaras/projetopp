@@ -7,12 +7,19 @@ from datetime import datetime, timedelta
 from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
+from django.utils import timezone
 
 class HomeView(TemplateView):
     template_name = 'agendamento/home.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['pacientes_count'] = Paciente.objects.count()
+        context['medicos_count'] = Medico.objects.count()
+        context['consultas_count'] = Consulta.objects.filter(
+            data_hora__gte=timezone.now()
+        ).count()
+        context['form'] = ConsultaForm()
         context['ultimas_consultas'] = Consulta.objects.all().order_by('-data_hora')[:5]
         return context
 
@@ -24,7 +31,7 @@ class PacienteCreateView(CreateView):
     model = Paciente
     form_class = PacienteForm
     template_name = 'agendamento/paciente_form.html'
-    success_url = reverse_lazy('paciente-list')
+    success_url = reverse_lazy('paciente_list')
     
     def form_valid(self, form):
         messages.success(self.request, 'Registro salvo com sucesso!')
@@ -35,7 +42,7 @@ class PacienteUpdateView(UpdateView):
     model = Paciente
     form_class = PacienteForm
     template_name = 'agendamento/paciente_form.html'
-    success_url = reverse_lazy('paciente-list')
+    success_url = reverse_lazy('paciente_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Registro salvo com sucesso!')
@@ -44,7 +51,7 @@ class PacienteUpdateView(UpdateView):
 class PacienteDeleteView(DeleteView):
     model = Paciente
     template_name = 'agendamento/paciente_confirm_delete.html'
-    success_url = reverse_lazy('paciente-list')
+    success_url = reverse_lazy('paciente_list')
 
 # Views para Médico
 class MedicoListView(ListView):
@@ -61,7 +68,7 @@ class MedicoCreateView(CreateView):
     model = Medico
     form_class = MedicoForm
     template_name = 'agendamento/medico_form.html'
-    success_url = reverse_lazy('medico-list')
+    success_url = reverse_lazy('medico_list')
     def form_valid(self, form):
         messages.success(self.request, 'Registro salvo com sucesso!')
         return super().form_valid(form)
@@ -71,7 +78,7 @@ class MedicoUpdateView(UpdateView):
     model = Medico
     form_class = MedicoForm
     template_name = 'agendamento/medico_form.html'
-    success_url = reverse_lazy('medico-list')
+    success_url = reverse_lazy('medico_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Registro salvo com sucesso!')
@@ -80,7 +87,7 @@ class MedicoUpdateView(UpdateView):
 class MedicoDeleteView(DeleteView):
     model = Medico
     template_name = 'agendamento/medico_confirm_delete.html'
-    success_url = reverse_lazy('medico-list')
+    success_url = reverse_lazy('medico_list')
 
 # Views para Consulta
 class ConsultaListView(ListView):
@@ -91,26 +98,52 @@ class ConsultaCreateView(CreateView):
     model = Consulta
     form_class = ConsultaForm
     template_name = 'agendamento/consulta_form.html'
-    success_url = reverse_lazy('consulta-list')
+    
+    def get_success_url(self):
+        messages.success(self.request, "Consulta agendada com sucesso!")
+        return reverse_lazy('consulta-list')
 
     def form_valid(self, form):
-        messages.success(self.request, 'Registro salvo com sucesso!')
-        return super().form_valid(form)
+        try:
+            response = super().form_valid(form)
+            return response
+        except Exception as e:
+            messages.error(self.request, f"Erro ao agendar consulta: {str(e)}")
+            return self.form_invalid(form)
+    
+    def form_invalid(self, form):
+        messages.error(self.request, "Corrija os erros no formulário")
+        return super().form_invalid(form)
     
 class ConsultaUpdateView(UpdateView):
     model = Consulta
     form_class = ConsultaForm
     template_name = 'agendamento/consulta_form.html'
-    success_url = reverse_lazy('consulta-list')
+    success_url = reverse_lazy('consulta_list')
     
     def form_valid(self, form):
-        messages.success(self.request, 'Registro salvo com sucesso!')
-        return super().form_valid(form)
+        try:
+            self.object = form.save()
+            
+            if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'redirect_url': self.get_success_url()
+                })
+            return super().form_valid(form)
+            
+        except Exception as e:
+            if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'errors': str(e)
+                }, status=400)
+            return self.form_invalid(form)
 
 class ConsultaDeleteView(DeleteView):
     model = Consulta
     template_name = 'agendamento/consulta_confirm_delete.html'
-    success_url = reverse_lazy('consulta-list')
+    success_url = reverse_lazy('consulta_list')
 
 class ConsultaHorariosView(TemplateView):
     login_url = '/admin/login/'

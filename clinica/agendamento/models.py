@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
+from django.utils import timezone
 from django.core.exceptions import ValidationError
+
 class Paciente(models.Model):
     nome = models.CharField(max_length=100)
     cpf = models.CharField(max_length=11, unique=True, validators=[MinLengthValidator(11)])
@@ -26,10 +28,16 @@ class Consulta(models.Model):
     observacoes = models.TextField(blank=True, null=True)
     
     def clean(self):
-        from django.utils import timezone
+       
+        
+        if not self.data_hora:
+            raise ValidationError("Data e hora são obrigatórias")
+        
+        if timezone.is_naive(self.data_hora):
+            self.data_hora = timezone.make_aware(self.data_hora)
         
         # Verifica se a data/hora está no passado
-        if self.data_hora and self.data_hora < timezone.now():
+        if self.data_hora < timezone.now():
             raise ValidationError("Não é possível agendar consultas no passado.")
         
         # Verifica conflito de horário

@@ -3,35 +3,45 @@
 {% block title %}Sistema de Agendamento Médico{% endblock %}
 
 {% block content %}
-<div class="jumbotron">
-    <h1 class="display-4">Bem-vindo à Clínica Médica!</h1>
-    <p class="lead">Sistema de agendamento de consultas</p>
-    <hr class="my-4">
-    <div class="row mt-4">
-        <div class="col-md-4 mb-3">
-            <a href="{% url 'paciente-list' %}" class="btn btn-primary btn-lg btn-block">Pacientes</a>
+<h2 class="mb-4">Bem-vindo ao Sistema de Agendamento Médico</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <h3>Pacientes</h3>
+                <p class="display-6">{{ pacientes_count }}</p>
+                <a href="{% url 'paciente_list' %}" class="btn btn-primary">Gerenciar</a>
+            </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <a href="{% url 'medico-list' %}" class="btn btn-success btn-lg btn-block">Médicos</a>
+        
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <h3>Médicos</h3>
+                <p class="display-6">{{ medicos_count }}</p>
+                <a href="{% url 'medico_list' %}" class="btn btn-primary">Gerenciar</a>
+            </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <a href="{% url 'consulta-list' %}" class="btn btn-info btn-lg btn-block">Consultas</a>
+        
+        <div class="card">
+            <div class="card-body text-center">
+                <h3>Consultas</h3>
+                <p class="display-6">{{ consultas_count }}</p>
+                <a href="{% url 'consulta_list' %}" class="btn btn-primary">Gerenciar</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Agendar Nova Consulta</h4>
+            </div>
+            <div class="card-body">
+                {% include "agendamento/consulta_form.html" %}
+            </div>
         </div>
     </div>
 </div>
 
-<h2>Últimas Consultas</h2>
-<div class="list-group">
-    {% for consulta in ultimas_consultas %}
-    <div class="list-group-item">
-        <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">{{ consulta.paciente.nome }} com Dr. {{ consulta.medico.nome }}</h5>
-            <small>{{ consulta.data_hora|date:"d/m/Y H:i" }}</small>
-        </div>
-        <p class="mb-1">{{ consulta.observacoes|default:"Nenhuma observação" }}</p>
-    </div>
-    {% empty %}
-    <div class="alert alert-warning">Nenhuma consulta agendada.</div>
-    {% endfor %}
-</div>
 {% endblock %}

@@ -1,49 +1,83 @@
 {% extends 'agendamento/base.html' %}
 
 {% block content %}
-<h2>{% if object %}Editar{% else %}Nova{% endif %} Consulta</h2>
 
-<form method="post" id="consultaForm" enctype="multipart/form-data">
+{% if messages %}
+<div class="alert-container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if form.errors %}
+<div class="alert alert-danger">
+    {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" id="consultaForm">
     {% csrf_token %}
     
-    <div class="form-group">
-        <label for="id_medico">Médico:</label>
-        {{ form.medico }}
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+            {{ error }}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="id_medico" class="form-label">Médico:</label>
+            {{ form.medico }}
+            {% if form.medico.errors %}
+            <div class="text-danger">{{ form.medico.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <label for="id_paciente" class="form-label">Paciente:</label>
+            {{ form.paciente }}
+            {% if form.paciente.errors %}
+            <div class="text-danger">{{ form.paciente.errors }}</div>
+            {% endif %}
+        </div>
     </div>
     
-    <div class="form-group">
-        <label for="id_data">Data:</label>
-        <input type="date" id="id_data" name="data" required>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="id_data" class="form-label">Data:</label>
+            <input type="date" id="id_data" name="data" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+            <label for="id_horario" class="form-label">Horário:</label>
+            <select id="id_horario" name="horario" class="form-control" required disabled>
+                <option value="">Selecione um médico e data</option>
+            </select>
+        </div>
     </div>
     
-    <div class="form-group">
-        <label for="id_horario">Horário Disponível:</label>
-        <select id="id_horario" name="horario" required disabled>
-            <option value="">Selecione um médico e uma data primeiro</option>
-        </select>
-    </div>
-    
-    <div class="form-group" style="display:none;">
-        {{ form.data_hora.label_tag }}
-        {{ form.data_hora }}
-    </div>
-    
-    <div class="form-group">
-        {{ form.paciente.label_tag }}
-        {{ form.paciente }}
-    </div>
-    
-    <div class="form-group">
-        {{ form.observacoes.label_tag }}
+    <div class="mb-3">
+        <label for="id_observacoes" class="form-label">Observações:</label>
         {{ form.observacoes }}
     </div>
     
-    {{ form.as_p }}
-
-    <button type="submit" class="btn btn-primary">Salvar</button>
-    <a href="{% url 'consulta-list' %}" class="btn btn-secondary">Cancelar</a>
+    <input type="hidden" id="id_data_hora" name="data_hora">
+    
+    <div class="d-grid">
+        <button type="submit" class="btn btn-success">Agendar Consulta</button>
+    </div>
 </form>
+{% endblock %}
 
+{% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const medicoSelect = document.getElementById('id_medico');
@@ -56,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = dataInput.value;
         
         if (!medicoId || !data) {
-            horarioSelect.innerHTML = '<option value="">Selecione um médico e uma data primeiro</option>';
+            horarioSelect.innerHTML = '<option value="">Selecione um médico e data</option>';
             horarioSelect.disabled = true;
             return;
         }
@@ -64,13 +98,10 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/api/horarios-disponiveis/${medicoId}/${data}/`)
             .then(response => response.json())
             .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-                
                 horarioSelect.innerHTML = '';
-                if (data.horarios.length === 0) {
+                if (data.error) {
+                    horarioSelect.innerHTML = `<option value="">${data.error}</option>`;
+                } else if (data.horarios.length === 0) {
                     horarioSelect.innerHTML = '<option value="">Nenhum horário disponível</option>';
                 } else {
                     data.horarios.forEach(horario => {
@@ -79,27 +110,51 @@ document.addEventListener('DOMContentLoaded', function() {
                         option.textContent = horario;
                         horarioSelect.appendChild(option);
                     });
-                    horarioSelect.disabled = false;
                 }
+                horarioSelect.disabled = false;
             });
     }
     
     medicoSelect.addEventListener('change', carregarHorarios);
     dataInput.addEventListener('change', carregarHorarios);
     
-    document.getElementById('consultaForm').addEventListener('submit', function(e) {
-        if (!dataHoraInput.value) {
-            e.preventDefault();
-            const data = dataInput.value;
-            const horario = horarioSelect.value;
-            if (data && horario) {
-                dataHoraInput.value = `${data}T${horario}`;
-                this.submit();
+    document.getElementById('consultaForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const dataHoraISO = `${document.getElementById('id_data').value}T${document.getElementById('id_horario').value}`;
+    formData.set('data_hora', dataHoraISO);
+    
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                window.location.reload();
             } else {
-                alert('Por favor, selecione um horário disponível');
+                showFormErrors(result.errors);
             }
         }
-    });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Ocorreu um erro ao processar sua solicitação');
+    }
+});
+
+function showFormErrors(errors) {
+    // Implemente a exibição de erros específicos
+    console.error('Form errors:', errors);
+    alert('Corrija os erros no formulário');
+}
 });
 </script>
 {% endblock %}
