@@ -6,39 +6,73 @@
 <h2 class="mb-4">Bem-vindo ao Sistema de Agendamento Médico</h2>
 
 <div class="row">
+    
     <div class="col-md-4">
-        <div class="card mb-3">
+        <div class="card h-100">  
             <div class="card-body text-center">
                 <h3>Pacientes</h3>
                 <p class="display-6">{{ pacientes_count }}</p>
                 <a href="{% url 'paciente_list' %}" class="btn btn-primary">Gerenciar</a>
             </div>
         </div>
-        
-        <div class="card mb-3">
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100">
             <div class="card-body text-center">
                 <h3>Médicos</h3>
                 <p class="display-6">{{ medicos_count }}</p>
                 <a href="{% url 'medico_list' %}" class="btn btn-primary">Gerenciar</a>
             </div>
         </div>
-        
-        <div class="card">
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
             <div class="card-body text-center">
-                <h3>Consultas</h3>
+                <h3>Consultas Agendadas</h3>
                 <p class="display-6">{{ consultas_count }}</p>
                 <a href="{% url 'consulta_list' %}" class="btn btn-primary">Gerenciar</a>
             </div>
         </div>
     </div>
+</div>
     
-    <div class="col-md-8">
+    <div class="row justify-content-center mt-4">  <!-- mt-4 para margem superior -->
+    <div class="col-md-12">  <!-- Usando 12 colunas para ocupar toda a largura -->
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Agendar Nova Consulta</h4>
+                <h4 class="mb-0">Consultas de Hoje ({{ data_hoje|date:"d/m/Y" }})</h4>
             </div>
             <div class="card-body">
-                {% include "agendamento/consulta_form.html" %}
+                {% if consultas_hoje %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Horário</th>
+                                    <th>Paciente</th>
+                                    <th>Médico</th>
+                                    <th>Especialidade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consulta in consultas_hoje %}
+                                <tr>
+                                    <td>{{ consulta.data_hora|time:"H:i" }}</td>
+                                    <td>{{ consulta.paciente.nome }}</td>
+                                    <td>{{ consulta.medico.nome }}</td>
+                                    <td>{{ consulta.medico.especialidade }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        Nenhuma consulta agendada para hoje.
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

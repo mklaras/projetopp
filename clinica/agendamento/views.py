@@ -14,13 +14,21 @@ class HomeView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        hoje = timezone.now().date()
+        
         context['pacientes_count'] = Paciente.objects.count()
         context['medicos_count'] = Medico.objects.count()
         context['consultas_count'] = Consulta.objects.filter(
             data_hora__gte=timezone.now()
         ).count()
-        context['form'] = ConsultaForm()
-        context['ultimas_consultas'] = Consulta.objects.all().order_by('-data_hora')[:5]
+       
+        context['consultas_hoje'] = Consulta.objects.filter(
+            data_hora__date=hoje
+        ).order_by('data_hora')
+        
+        context['consultas_hoje_count'] = context['consultas_hoje'].count()
+        context['data_hoje'] = hoje
+        
         return context
 
 class PacienteListView(ListView):
